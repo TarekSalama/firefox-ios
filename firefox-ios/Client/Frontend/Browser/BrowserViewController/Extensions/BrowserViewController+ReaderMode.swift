@@ -219,6 +219,9 @@ extension BrowserViewController: ReaderModeBarViewDelegate {
             }
 
             present(readerModeStyleViewController, animated: true, completion: nil)
+          
+        case .summarize:
+            print(">> should summarize")
 
         case .markAsRead:
             guard let url = self.tabManager.selectedTab?.url?.displayURL?.absoluteString,

@@ -9,6 +9,7 @@ import Shared
 enum ReaderModeBarButtonType {
     case markAsRead
     case markAsUnread
+    case summarize
     case settings
     case addToReadingList
     case removeFromReadingList
@@ -17,6 +18,7 @@ enum ReaderModeBarButtonType {
         switch self {
         case .markAsRead: return .ReaderModeBarMarkAsRead
         case .markAsUnread: return .ReaderModeBarMarkAsUnread
+        case .summarize: return .ReaderModeBarSummarize
         case .settings: return .ReaderModeBarSettings
         case .addToReadingList: return .ReaderModeBarAddToReadingList
         case .removeFromReadingList: return .ReaderModeBarRemoveFromReadingList
@@ -27,6 +29,7 @@ enum ReaderModeBarButtonType {
         switch self {
         case .markAsRead: return "MarkAsRead"
         case .markAsUnread: return "MarkAsUnread"
+        case .summarize: return StandardImageIdentifiers.Large.paper
         case .settings: return "SettingsSerif"
         case .addToReadingList: return ImageIdentifiers.addToReadingList
         case .removeFromReadingList: return StandardImageIdentifiers.Large.delete
@@ -46,7 +49,7 @@ protocol ReaderModeBarViewDelegate: AnyObject {
 
 class ReaderModeBarView: UIView, AlphaDimmable, TopBottomInterchangeable, SearchBarLocationProvider {
     private struct UX {
-        static let buttonWidth: CGFloat = 80
+        static let buttonWidth: CGFloat = 40
     }
 
     weak var delegate: ReaderModeBarViewDelegate?
@@ -56,12 +59,14 @@ class ReaderModeBarView: UIView, AlphaDimmable, TopBottomInterchangeable, Search
     var contextStrokeColor: UIColor?
 
     var readStatusButton: UIButton!
+    var summarizeButton: UIButton!
     var settingsButton: UIButton!
     var listStatusButton: UIButton!
 
     @objc dynamic var buttonTintColor = UIColor.clear {
         didSet {
             readStatusButton.tintColor = self.buttonTintColor
+            summarizeButton.tintColor = self.buttonTintColor
             settingsButton.tintColor = self.buttonTintColor
             listStatusButton.tintColor = self.buttonTintColor
         }
@@ -69,32 +74,35 @@ class ReaderModeBarView: UIView, AlphaDimmable, TopBottomInterchangeable, Search
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-
+      
         readStatusButton = createButton(.markAsRead, action: #selector(tappedReadStatusButton))
         readStatusButton.accessibilityIdentifier = "ReaderModeBarView.readStatusButton"
-        NSLayoutConstraint.activate([
-            readStatusButton.leadingAnchor.constraint(equalTo: leadingAnchor),
-            readStatusButton.heightAnchor.constraint(equalTo: heightAnchor),
-            readStatusButton.centerYAnchor.constraint(equalTo: centerYAnchor),
-            readStatusButton.widthAnchor.constraint(equalToConstant: UX.buttonWidth)
-        ])
-
+        
+        summarizeButton = createButton(.summarize, action: #selector(tappedSummarizeButton))
+        summarizeButton.accessibilityIdentifier = "ReaderModeBarView.summarizeButton"
+        
         settingsButton = createButton(.settings, action: #selector(tappedSettingsButton))
         settingsButton.accessibilityIdentifier = "ReaderModeBarView.settingsButton"
-        NSLayoutConstraint.activate([
-            settingsButton.heightAnchor.constraint(equalTo: heightAnchor),
-            settingsButton.centerXAnchor.constraint(equalTo: centerXAnchor),
-            settingsButton.centerYAnchor.constraint(equalTo: centerYAnchor),
-            settingsButton.widthAnchor.constraint(equalToConstant: UX.buttonWidth)
-        ])
 
         listStatusButton = createButton(.addToReadingList, action: #selector(tappedListStatusButton))
         listStatusButton.accessibilityIdentifier = "ReaderModeBarView.listStatusButton"
+      
+        parent = UIStackView(arrangedSubviews: [readStatusButton,
+                                                summarizeButton,
+                                                settingsButton,
+                                                listStatusButton])
+        parent?.axis = .horizontal
+        parent?.alignment = .center
+        parent?.distribution = .fillEqually
+      
+        addSubviews(parent!)
+        parent!.translatesAutoresizingMaskIntoConstraints = false
+      
         NSLayoutConstraint.activate([
-            listStatusButton.rightAnchor.constraint(equalTo: safeAreaLayoutGuide.rightAnchor),
-            listStatusButton.heightAnchor.constraint(equalTo: heightAnchor),
-            listStatusButton.centerYAnchor.constraint(equalTo: centerYAnchor),
-            listStatusButton.widthAnchor.constraint(equalToConstant: UX.buttonWidth)
+          parent!.leadingAnchor.constraint(equalTo: leadingAnchor),
+          parent!.trailingAnchor.constraint(equalTo: trailingAnchor),
+          parent!.topAnchor.constraint(equalTo: topAnchor),
+          parent!.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
     }
 
@@ -133,6 +141,11 @@ class ReaderModeBarView: UIView, AlphaDimmable, TopBottomInterchangeable, Search
     @objc
     func tappedReadStatusButton(_ sender: UIButton!) {
         delegate?.readerModeBar(self, didSelectButton: unread ? .markAsRead : .markAsUnread)
+    }
+  
+    @objc
+    func tappedSummarizeButton(_ sender: UIButton!) {
+        delegate?.readerModeBar(self, didSelectButton: .summarize)
     }
 
     @objc

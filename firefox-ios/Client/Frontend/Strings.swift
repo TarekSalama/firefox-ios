@@ -4689,6 +4689,11 @@ extension String {
         tableName: nil,
         value: "Mark as Unread",
         comment: "Name for Mark as unread button in reader mode")
+    public static let ReaderModeBarSummarize = MZLocalizedString(
+        key: "Summarize",
+        tableName: nil,
+        value: nil,
+        comment: "Name for the summarize button in reader mode.")
     public static let ReaderModeBarSettings = MZLocalizedString(
         key: "Display Settings",
         tableName: nil,
